@@ -1,10 +1,13 @@
 using System;
 using System.Windows.Forms;
 using System.Drawing;
+using System.IO;
+
 
 class hw: Form {
 
 	Label lblScore;
+	Label lblHighScore;
 	Label lblGuess;
 	TextBox txtGuess;
 	Button btnOK;
@@ -13,13 +16,34 @@ class hw: Form {
 	int myNumber;
 	int trials;
 	int score=0;
+	int highscore=0;
+
+	const String HIGHSCORE_FILE="highscore.txt";
 
 	hw() {
 		InitComponents();
 		InitGame();
 	}
 
+	void LoadHighScore() {
+		highscore=0;
+		if(File.Exists(HIGHSCORE_FILE)) {
+			StreamReader sr=File.OpenText(HIGHSCORE_FILE);
+			highscore=Int32.Parse(sr.ReadLine());
+			sr.Close();
+		}
+		lblHighScore.Text=String.Format("HighScore: {0}",highscore);
+	}
+
+	void SaveHighScore() {
+		StreamWriter sw=new StreamWriter(HIGHSCORE_FILE);
+		sw.WriteLine(highscore.ToString());
+		sw.Close();
+		lblHighScore.Text=String.Format("HighScore: {0}",highscore);
+	}
+
 	void InitGame() {
+		LoadHighScore();
 		trials=0;
 		myNumber=random.Next(100)+1;
 	}
@@ -37,6 +61,11 @@ class hw: Form {
 		lblScore.Location=new Point(16,16);
 		lblScore.AutoSize=true;
 
+		lblHighScore=new Label();
+		lblHighScore.Text=String.Format("HighScore: {0}",highscore);
+		lblHighScore.Location=new Point(128,16);
+		lblHighScore.AutoSize=true;
+
 		lblGuess=new Label();
 		lblGuess.Text="Guess my number from 1 to 100";
 		lblGuess.Location=new Point(16,48);
@@ -53,6 +82,7 @@ class hw: Form {
 		btnOK.Click += new EventHandler(btnOK_OnClicked);
 
 		Controls.Add(lblScore);
+		Controls.Add(lblHighScore);
 		Controls.Add(lblGuess);
 		Controls.Add(txtGuess);
 		Controls.Add(btnOK);
@@ -66,6 +96,13 @@ class hw: Form {
 				MessageBox.Show(String.Format("Correct! You've guessed it in {0} trial(s)", trials));
 				MessageBox.Show("Press OK for the next number");
 				score++;
+
+				if(score>highscore) {
+					highscore=score;
+					SaveHighScore();
+				}
+
+
 				lblScore.Text=String.Format("Score: {0}",score);
 				InitGame();
 			} else if(trials>=10) {
